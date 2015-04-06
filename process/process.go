@@ -66,6 +66,7 @@ func NewJubatusProcess(command string, filepath string) (*JubatusProcess, error)
 		}
 
 		r := bufio.NewReader(stdout)
+		finish := false
 		for {
 			byteline, _, err := r.ReadLine()
 			if err != nil {
@@ -75,6 +76,7 @@ func NewJubatusProcess(command string, filepath string) (*JubatusProcess, error)
 			line := string(byteline)
 			fmt.Println(line)
 			if strings.Contains(line, "RPC server startup") {
+				finish = true
 				break
 			} else if strings.Contains(line, "server failed to start") {
 				port += 1
@@ -83,6 +85,10 @@ func NewJubatusProcess(command string, filepath string) (*JubatusProcess, error)
 				fmt.Println("fatal jubatus error")
 				return nil, JubatusProcessError{line}
 			}
+		}
+
+		if !finish {
+			continue
 		}
 
 		// create client
