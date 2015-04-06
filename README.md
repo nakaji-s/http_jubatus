@@ -10,7 +10,7 @@ boot server.
 $ go run http_jubatus.go
 ```
 
-you can create new jubatus process via rpc.
+you can create new jubatus process via cURL rpc.
 
 ```
 $ curl localhost:3000/classifier \
@@ -28,7 +28,7 @@ $ curl localhost:3000/classifier \
                 ]\
             },\
             "method" : "PA"\
-        }\
+          }\
         }'
 ```
 
