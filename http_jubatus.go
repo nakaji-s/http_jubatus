@@ -129,7 +129,8 @@ func main() {
 			*/
 			name := c.Params.ByName("name")
 			if server, ok := servers[local_module][name]; ok {
-				server.Kill()
+				server.Proc.Kill() // kill process
+				server.Kill()      // delete .json
 				delete(servers[local_module], name)
 				c.String(200, "deleted")
 			} else {
