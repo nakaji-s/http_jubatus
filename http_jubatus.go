@@ -130,7 +130,7 @@ func main() {
 			name := c.Params.ByName("name")
 			if server, ok := servers[local_module][name]; ok {
 				server.Kill()
-				delete(servers, name)
+				delete(servers[local_module], name)
 				c.String(200, "deleted")
 			} else {
 				c.String(404, "target "+name+" not found")
