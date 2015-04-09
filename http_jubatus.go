@@ -16,7 +16,7 @@ type BootJSON struct {
 }
 
 type JubatusServer struct {
-	Filename string
+	Filepath string
 	Proc     process.JubatusProcess
 }
 
@@ -25,7 +25,7 @@ func (j *JubatusServer) Call(method string, arg []interface{}) (interface{}, err
 }
 
 func (j *JubatusServer) Kill() {
-	os.Remove(j.Filename)
+	os.Remove(j.Filepath)
 }
 
 func NewJubatusServer(jubatype string, arg interface{}) (*JubatusServer, error) {
@@ -48,7 +48,7 @@ func NewJubatusServer(jubatype string, arg interface{}) (*JubatusServer, error) 
 		return nil, err
 	}
 
-	return &JubatusServer{filename, *new_process}, err
+	return &JubatusServer{filepath, *new_process}, err
 }
 
 func main() {
