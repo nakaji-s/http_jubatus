@@ -16,19 +16,19 @@ you can create new jubatus process via cURL rpc.
 $ curl localhost:3000/classifier \
     -H 'Content-type: application/json' \
     -X POST \
-    -d '{ \
-          "name": "sample_classifier", \
-          "parameter": { \
-            "converter" : { \
-                "string_rules" : [ \
-                    { "key" : "*", type : "str", "sample_weight" : "bin", "global_weight" : "bin" }\
-                ],\
-                "num_rules" : [ \
-                    { "key" : "*", type : "num" } \
-                ]\
-            },\
-            "method" : "PA"\
-          }\
+    -d '{
+          "name": "sample_classifier",
+          "parameter": {
+            "converter" : {
+                "string_rules" : [
+                    { "key" : "*", "type" : "str", "sample_weight" : "bin", "global_weight" : "bin" }
+                ],
+                "num_rules" : [
+                    { "key" : "*", "type" : "num" }
+                ]
+            },
+            "method" : "PA"
+          }
         }'
 ```
 
@@ -44,23 +44,23 @@ More examples of jubatus configuration, you can see [jubatus repository](https:/
 Now, you can access HTTP endpoint `/classifier/sample_classifier/<method>`.
 
 ```
-$ curl localhost:3000/classifier/sample_classifier/train \
+curl localhost:3000/classifier/sample_classifier/train \
     -H 'Content-type: application/json' \
     -X POST \
-    -d [ \  # arguments must be passed as array
-        [ \  # classify method requires array of `labeled_datum`
-            [ \  # a `labeled datum` structure consist of 2-length array
-                "bar" \  # label
-                [ \  # datum
-                    [], \  # string_values(it is array)
-                    [ \  # num_values(it is array)
-                        ["fuga", 1.0] \ # num_value
-                    ], \
-                    [] \ # binary_valies (it is array)
-                ] \
-            ] \
-        ] \
-      ]
+    -d '[
+        [
+            [
+                "bar",
+                [
+                    [],
+                    [
+                        ["fuga", 1.0]
+                    ],
+                    []
+                ]
+            ]
+        ]
+      ]'
 ```
 
 you will get result

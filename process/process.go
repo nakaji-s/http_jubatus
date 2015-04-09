@@ -1,20 +1,21 @@
 package process
 
 import (
+	"bufio"
+	"fmt"
+	"github.com/ugorji/go/codec"
 	"net"
 	"net/rpc"
-	"fmt"
-	"os/exec"
-	"strings"
-	"bufio"
 	"os"
-	"github.com/ugorji/go/codec"
+	"os/exec"
+	"reflect"
+	"strings"
 )
 
 type JubatusProcess struct {
-	cmd  *exec.Cmd
-	Port int
-	client rpc.Client
+	cmd    *exec.Cmd
+	Port   int
+	client *rpc.Client
 }
 
 func jubatus_keep(target exec.Cmd) {
@@ -43,9 +44,43 @@ func (j *JubatusProcess) Call(method string, arg []interface{}) (interface{}, er
 	var result interface{}
 	fmt.Println("calling ", method, " ", arg, " port:", j.Port)
 	name := []interface{}{"name"}
-	j.client.Call(method, codec.MsgpackSpecRpcMultiArgs(append(name, arg...)), &result)
+
+	for {
+		if j.client != nil {
+			err := j.client.Call(method, codec.MsgpackSpecRpcMultiArgs(append(name, arg...)), &result)
+			if err == nil {
+				break
+			}
+			if err.Error() == "connection is shut down" { // this code seems very ugly, is it go style?
+				j.client, err = connect(fmt.Sprintf("localhost:%d", j.Port))
+				continue
+			}
+
+			if reflect.TypeOf(err).String() == ("*errors.errorString") {
+				return nil, err
+			}
+		}
+
+		new_client, err := connect(fmt.Sprintf("localhost:%d", j.Port))
+		if err != nil {
+			return nil, err
+		}
+		j.client = new_client
+	}
 	fmt.Println("result ", result)
 	return result, nil
+}
+
+func connect(target string) (*rpc.Client, error) {
+	// create client
+	conn, err := net.Dial("tcp", target)
+	if err != nil {
+		return nil, err
+	}
+	mh := new(codec.MsgpackHandle)
+	mh.StructToArray = true
+	rpcCodec := codec.MsgpackSpecRpc.ClientCodec(conn, mh)
+	return rpc.NewClientWithCodec(rpcCodec), nil
 }
 
 func NewJubatusProcess(command string, filepath string) (*JubatusProcess, error) {
@@ -91,16 +126,10 @@ func NewJubatusProcess(command string, filepath string) (*JubatusProcess, error)
 			continue
 		}
 
-		// create client
-		conn, err := net.Dial("tcp", fmt.Sprintf("localhost:%d", port))
+		client, err := connect(fmt.Sprintf("localhost:%d", port))
 		if err != nil {
 			return nil, err
 		}
-		mh := new(codec.MsgpackHandle)
-		mh.StructToArray = true
-		rpcCodec := codec.MsgpackSpecRpc.ClientCodec(conn, mh)
-		client := rpc.NewClientWithCodec(rpcCodec)
-
-		return &JubatusProcess{cmd, port, *client}, nil
+		return &JubatusProcess{cmd, port, client}, nil
 	}
 }

@@ -84,12 +84,10 @@ client = subprocess.Popen([
     "-X", "POST",
     "-d", json.dumps([  # array
         [
-            [
-                [  # datum
-                    [],  # string values
-                    [["hoge", 1.0]],  # num value
-                    []  # binary values
-                ]
+            [  # datum
+                [],  # string values
+                [["hoge", 1.0]],  # num value
+                []  # binary values
             ]
         ]
     ]),

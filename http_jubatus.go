@@ -11,7 +11,7 @@ import (
 )
 
 type BootJSON struct {
-	Name  string      `json:"name"      binding:"required"`
+	Name  string      `json:"name"			binding:"required"`
 	Param interface{} `json:"parameter" binding:"required"`
 }
 
@@ -62,9 +62,9 @@ func main() {
 
 		router.POST("/"+local_module, func(c *gin.Context) {
 			/*
-			   Create new jubatus model
-			   Name => unique name of new model
-			   Param => jubatus boot parameter passed with -f option
+			 Create new jubatus model
+			 Name => unique name of new model
+			 Param => jubatus boot parameter passed with -f option
 			*/
 
 			fmt.Println("" + local_module)
@@ -91,8 +91,8 @@ func main() {
 
 		router.POST("/"+local_module+"/:name/:method", func(c *gin.Context) {
 			/*
-			   Do machine learning
-			   you can use Jubatus via HTTP rpc
+			 Do machine learning
+			 you can use Jubatus via HTTP rpc
 			*/
 			var argument []interface{}
 			c.Bind(&argument)
@@ -104,7 +104,14 @@ func main() {
 				fmt.Println(argument)
 				ret, err := server.Call(method, argument)
 				fmt.Println("return: ", ret, err)
-				c.JSON(200, gin.H{"result": ret})
+				if err == nil {
+					c.JSON(200, gin.H{"result": ret})
+				} else {
+					c.JSON(500, gin.H{
+						"result":  nil,
+						"message": err.Error(),
+					})
+				}
 			} else {
 				c.String(404, "target "+name+" not found")
 			}
@@ -112,7 +119,7 @@ func main() {
 
 		router.GET("/"+local_module, func(c *gin.Context) {
 			/*
-			   get list of names of machine learning models
+			 get list of names of machine learning models
 			*/
 			ret := []string{}
 			for _, local_module := range modules {
@@ -125,7 +132,7 @@ func main() {
 
 		router.DELETE("/"+local_module+"/:name", func(c *gin.Context) {
 			/*
-			   delete machine learning model
+			 delete machine learning model
 			*/
 			name := c.Params.ByName("name")
 			if server, ok := servers[local_module][name]; ok {
