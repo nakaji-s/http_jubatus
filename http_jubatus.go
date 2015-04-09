@@ -120,7 +120,7 @@ func main() {
 					ret = append(ret, local_module+"/"+name)
 				}
 			}
-			c.JSON(200, gin.H{"servers": "hoge"})
+			c.JSON(200, gin.H{"servers": ret})
 		})
 
 		router.DELETE("/"+local_module+"/:name", func(c *gin.Context) {
