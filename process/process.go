@@ -8,7 +8,6 @@ import (
 	"net/rpc"
 	"os"
 	"os/exec"
-	"reflect"
 	"strings"
 )
 
@@ -16,13 +15,6 @@ type JubatusProcess struct {
 	cmd    *exec.Cmd
 	Port   int
 	client *rpc.Client
-}
-
-func jubatus_keep(target exec.Cmd) {
-	for {
-		target.Wait()
-		target.Start()
-	}
 }
 
 type JubatusProcessError struct {
@@ -51,21 +43,14 @@ func (j *JubatusProcess) Call(method string, arg []interface{}) (interface{}, er
 			if err == nil {
 				break
 			}
-			if err.Error() == "connection is shut down" { // this code seems very ugly, is it go style?
-				j.client, err = connect(fmt.Sprintf("localhost:%d", j.Port))
-				continue
-			}
-
-			if reflect.TypeOf(err).String() == ("*errors.errorString") {
-				return nil, err
-			}
 		}
 
-		new_client, err := connect(fmt.Sprintf("localhost:%d", j.Port))
+		newClient, err := connect(fmt.Sprintf("localhost:%d", j.Port))
 		if err != nil {
 			return nil, err
 		}
-		j.client = new_client
+		fmt.Println("reconnected to jubatus process")
+		j.client = newClient
 	}
 	fmt.Println("result ", result)
 	return result, nil
@@ -84,6 +69,10 @@ func connect(target string) (*rpc.Client, error) {
 }
 
 func NewJubatusProcess(command string, filepath string) (*JubatusProcess, error) {
+	/*
+    boot jubauts procsss.
+    it searches available port for jubatus from 9200
+  */
 	port := 9200
 	for {
 		cmd := exec.Command(command, "-f", filepath, "-p", fmt.Sprintf("%d", port))
