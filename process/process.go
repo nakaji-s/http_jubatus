@@ -8,6 +8,7 @@ import (
 	"net/rpc"
 	"os"
 	"os/exec"
+	"reflect"
 	"strings"
 )
 
@@ -39,8 +40,11 @@ func (j *JubatusProcess) Call(method string, arg []interface{}) (interface{}, er
 
 	for {
 		if j.client != nil {
-			err := j.client.Call(method, codec.MsgpackSpecRpcMultiArgs(append(name, arg...)), &result)
+			args := replaceFloat64To32(append(name, arg...))
+			err := j.client.Call(method, codec.MsgpackSpecRpcMultiArgs(args), &result)
 			if err == nil {
+				result = replaceByteSliceToString([]interface{}{result})[0]
+
 				break
 			}
 		}
@@ -70,9 +74,9 @@ func connect(target string) (*rpc.Client, error) {
 
 func NewJubatusProcess(command string, filepath string) (*JubatusProcess, error) {
 	/*
-    boot jubauts procsss.
-    it searches available port for jubatus from 9200
-  */
+	   boot jubauts procsss.
+	   it searches available port for jubatus from 9200
+	*/
 	port := 9200
 	for {
 		cmd := exec.Command(command, "-f", filepath, "-p", fmt.Sprintf("%d", port))
@@ -121,4 +125,41 @@ func NewJubatusProcess(command string, filepath string) (*JubatusProcess, error)
 		}
 		return &JubatusProcess{cmd, port, client}, nil
 	}
+}
+
+func replaceFloat64To32(src []interface{}) []interface{} {
+	out := []interface{}{}
+	for _, v := range src {
+		if reflect.TypeOf(v).Kind() == reflect.Float64 {
+			tmp_float64, _ := v.(float64)
+			out = append(out, float32(tmp_float64))
+		} else if reflect.TypeOf(v).Kind() == reflect.Slice && reflect.TypeOf(v).Elem().Kind() == reflect.Interface {
+			tmp_slice, _ := v.([]interface{})
+			out = append(out, replaceFloat64To32(tmp_slice))
+		} else {
+			out = append(out, v)
+		}
+	}
+	return out
+}
+
+func replaceByteSliceToString(src []interface{}) []interface{} {
+	out := []interface{}{}
+	for _, v := range src {
+		if reflect.TypeOf(v).Kind() == reflect.Slice {
+			switch reflect.TypeOf(v).Elem().Kind() {
+			case reflect.Uint8:
+				tmp_str, _ := v.([]byte)
+				out = append(out, string(tmp_str))
+			case reflect.Interface:
+				tmp_slice, _ := v.([]interface{})
+				out = append(out, replaceByteSliceToString(tmp_slice))
+			default:
+				out = append(out, v)
+			}
+		} else {
+			out = append(out, v)
+		}
+	}
+	return out
 }
