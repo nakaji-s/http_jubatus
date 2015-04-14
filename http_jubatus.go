@@ -2,7 +2,7 @@
 package main
 
 import (
-	"./process"
+	"github.com/kumagi/http_jubatus/process"
 	"code.google.com/p/go-uuid/uuid"
 	"encoding/json"
 	"fmt"
