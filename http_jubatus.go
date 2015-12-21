@@ -2,11 +2,11 @@
 package main
 
 import (
-	"github.com/kumagi/http_jubatus/process"
 	"code.google.com/p/go-uuid/uuid"
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/kumagi/http_jubatus/process"
 	"os"
 )
 
@@ -20,8 +20,8 @@ type JubatusServer struct {
 	Proc     process.JubatusProcess
 }
 
-func (j *JubatusServer) Call(method string, arg []interface{}) (interface{}, error) {
-	return j.Proc.Call(method, arg)
+func (j *JubatusServer) Call(module string, method string, arg []interface{}) (interface{}, error) {
+	return j.Proc.Call(module, method, arg)
 }
 
 func (j *JubatusServer) Kill() {
@@ -55,7 +55,18 @@ func main() {
 	router := gin.Default()
 
 	servers := make(map[string]map[string]*JubatusServer)
-	modules := []string{"classifier", "recommender", "regression"}
+	modules := []string{
+		"anomaly",
+		"bandit",
+		"burst",
+		"classifier",
+		"clustering",
+		"graph",
+		"nearest_neighbor",
+		"recommender",
+		"regression",
+		"stat",
+	}
 
 	for _, module := range modules {
 		local_module := module
@@ -102,7 +113,7 @@ func main() {
 
 			if server, ok := servers[local_module][name]; ok {
 				fmt.Println(argument)
-				ret, err := server.Call(method, argument)
+				ret, err := server.Call(local_module, method, argument)
 				fmt.Println("return: ", ret, err)
 				if err == nil {
 					c.JSON(200, gin.H{"result": ret})
